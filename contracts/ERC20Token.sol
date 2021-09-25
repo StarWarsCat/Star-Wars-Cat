@@ -14,7 +14,7 @@ contract ERC20Token is ERC20Upgradeable {
     }
 
     function decimals() public view override returns (uint8) {
-        return 9;
+        return 18;
     }
 
 }
