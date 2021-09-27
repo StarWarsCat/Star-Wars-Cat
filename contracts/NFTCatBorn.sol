@@ -26,6 +26,11 @@ contract NFTCatBorn is Random, DivToken, XYZConfig {
         uint initTime; // 初始时间
         uint feedTime; // 到期喂食时间
         address owner; // 拥有者
+        uint monStype;     // 母亲类型
+        uint monSex;       // 母亲
+        uint16 monHp; // 母亲生命值
+        uint16 monAtk; // 母亲攻击力
+        uint16 monDef; // 母亲防御
     }
 
     using SafeMath for uint;
@@ -76,10 +81,10 @@ contract NFTCatBorn is Random, DivToken, XYZConfig {
         pregnancyNum = [3000, 2000];
         pregnancyRate = [10, 20, 30, 40, 50];
         bornSeconds = 10 days; // 怀孕周期
-        feedFee = 5_0000 * 1e9; // 喂食费用
-        speedFee = 10_0000 * 1e9; // 加速费用
+        feedFee = 300 * 1e18; // 喂食费用
+        speedFee = 800 * 1e18; // 加速费用
         feedInterval = 1 days; // 喂食间隔
-        femaleUseCP = [10_0000 * 1e9, 25_0000 * 1e9];
+        femaleUseCP = [1000 * 1e18, 2000 * 1e18];
     }
 
     function getBabyInfo(uint _tokenId) public view returns (BabyInfo memory) {
@@ -124,15 +129,20 @@ contract NFTCatBorn is Random, DivToken, XYZConfig {
         return MALE;
     }
 
-    function genBaby(address _addr, uint _tokenId, uint _grade, uint _stype, uint _sex) internal view returns (BabyInfo memory t) {
+    function genBaby(address _addr, uint _tokenId, uint _stype, uint _sex, ICat.TokenInfo memory mon) internal view returns (BabyInfo memory t) {
         t.tokenId = _tokenId;
         t.endTime = block.timestamp + bornSeconds;
         t.owner = _addr;
-        t.grade = _grade;
+        t.grade = mon.grade;
         t.stype = _stype;
         t.sex = _sex;
         t.feedTime = block.timestamp + feedInterval;
         t.initTime = block.timestamp;
+        t.monStype = mon.stype;
+        t.monSex = mon.sex;
+        t.monHp = mon.hp;
+        t.monAtk = mon.atk;
+        t.monDef = mon.def;
     }
 
     // 怀孕
@@ -158,7 +168,7 @@ contract NFTCatBorn is Random, DivToken, XYZConfig {
 
         uint256 amount = msg.value;
         require(pregnancyFee[mon.grade - 3][_rate - 1] == amount, "bnb not enough");
-        DivToPeopleEth(amount);
+//        DivToPeopleEth(amount);
 
         // 增加生出母猫概率
         uint femaleRate = female_cat_rate;
@@ -177,10 +187,15 @@ contract NFTCatBorn is Random, DivToken, XYZConfig {
             // 生成孕期小猫数据
             uint _sex = genSex(femaleRate);
             uint _stype = 0;
-            if (mon.grade < 4) {
-                _stype = uint8(rand_weight(cat_stype_rate)); // 随机猫属于哪个系列
+            if (mon.grade == 1) {
+                _stype = uint8(rand_weight(cat_stype_rate1)); // 随机猫属于哪个系列
+            } else if (mon.grade == 2) {
+                _stype = uint8(rand_weight(cat_stype_rate2));
+            } else if (mon.grade == 3) {
+                _stype = uint8(rand_weight(cat_stype_rate3));
             }
-            BabyInfo memory c = genBaby(msg.sender, _mother, mon.grade, _stype, _sex);
+
+            BabyInfo memory c = genBaby(msg.sender, _mother, _stype, _sex, mon);
             mintOnlyBy(msg.sender, _mother, c);
 
             // 修改可生育小猫数据
@@ -289,7 +304,8 @@ contract NFTCatBorn is Random, DivToken, XYZConfig {
         ti.feedTime = block.timestamp + feedInterval;
         ti.initTime = block.timestamp;
         ti.step = STEP_BABY;
-        ti.power = basePower[ti.grade];
+        ti.power = basePower[ti.grade - 1];
+        ti.initPower = basePower[ti.grade - 1];
 
         return ti;
     }

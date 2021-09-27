@@ -25,7 +25,7 @@ contract NFTCatTransfer is Initializable {
         catAddr = ICat(_catAddr);
         payToken = IERC20(_payToken);
         taxAddr = _taxAddr;
-        fee = 1_0000 * 1e9;
+        fee = 1_0000 * 1e18;
     }
 
     function transferNftList(address _to, uint[] memory _tokenids) external returns(bool) {

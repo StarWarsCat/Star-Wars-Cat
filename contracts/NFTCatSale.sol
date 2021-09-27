@@ -18,14 +18,14 @@ contract NFTCatSale is DivToken {
     uint constant PRICE_TYPE_BNB = 1;
     uint constant PRICE_TYPE_CP = 2;
 
-    uint constant OFF_GOODS_FEE = 1_0000 * 1e9; // 下架手续费
+    uint constant OFF_GOODS_FEE = 1_0000 * 1e18; // 下架手续费
     uint constant SALE_SUCC_TAX = 5; // 交易成功手续费
     uint constant delayCheckTime = 10 minutes;
 
     using SafeMath for uint;
 
     event SaleCat(address indexed _sender, uint indexed _tokenId, uint indexed _id, uint _grade, uint _stype, uint _sex,
-        uint _price, uint _type, uint _minPrice, uint _saleDuration, uint _delayDuration);
+        uint _price, uint _type, uint _minPrice, uint _saleDuration, uint _delayDuration, uint _step, uint _hp, uint _atk, uint _def);
     event BuyCat(address indexed _sender, uint indexed _id, uint indexed _tokenId, uint _price, uint _endTime, bool _delay);
     event WithdrawCat(address indexed _sender, uint indexed _id, uint indexed _tokenId, uint _tax, uint _money);
     event AdminWithdrawToken(address indexed _sender, uint indexed _eth, uint indexed _cp);
@@ -64,6 +64,10 @@ contract NFTCatSale is DivToken {
         t.initialOwner = msg.sender;
         t.owner = msg.sender;
         t.delayStart = false;
+        t.step = _tokenInfo.step;
+        t.hp = _tokenInfo.hp;
+        t.atk = _tokenInfo.atk;
+        t.def = _tokenInfo.def;
     }
 
     // 上架猫  1BNB拍卖  2CP拍卖
@@ -82,7 +86,7 @@ contract NFTCatSale is DivToken {
 
         goodsAddr.add(msg.sender, goods.id, goods);
 
-        emit SaleCat(msg.sender, _tokenId, goods.id, goods.grade, goods.stype, goods.sex, _price, _type, _minPriceAmount, _saleDuration, _delayDuration);
+        emit SaleCat(msg.sender, _tokenId, goods.id, goods.grade, goods.stype, goods.sex, _price, _type, _minPriceAmount, _saleDuration, _delayDuration, goods.step, goods.hp, goods.atk, goods.def);
 
         return true;
     }
@@ -189,14 +193,14 @@ contract NFTCatSale is DivToken {
                 require(finalprice + tax <= address(this).balance, "finalprice + tax == address(this).balance");
                 payable(goods.initialOwner).transfer(finalprice);
                 payable(feeTo).transfer(tax);
-                DivToPeopleEth(tax);
+//                DivToPeopleEth(tax);
             } else {
                 payToken.transfer(goods.initialOwner, finalprice);
                 payToken.transfer(feeTo, tax);
-                DivToPeopleCP(tax);
+//                DivToPeopleCP(tax);
             }
 
-            // 把猫给卖家
+            // 把猫给买家
             goodsAddr.catTransfer(goods.owner, goods.tokenId);
 
             emit WithdrawCat(msg.sender, goods.id, goods.tokenId, tax, finalprice);

@@ -105,6 +105,11 @@ contract NFTWrapper is BaseUpgradeable {
         _totalWeight = _totalWeight.sub(_weight);
         _weights[_sender] = _weights[_sender].sub(_weight);
     }
+
+    function updatePower(address _sender, uint _weight) public virtual {
+        _totalWeight = _totalWeight.add(_weight);
+        _weights[_sender] = _weights[_sender].add(_weight);
+    }
 }
 
 contract NFTPool is NFTWrapper {
@@ -125,7 +130,7 @@ contract NFTPool is NFTWrapper {
     // 矿池产出衰减期数
     uint constant CYCLE_TIMES = POOL_LIFE_CYCLE / INTEREST_CYCLE;
 
-    uint constant DECIMALS = 10 ** 9;
+    uint constant DECIMALS = 10 ** 18;
     // mint BToken amount each week
     uint INTEREST_BASE_AMOUNT;
     uint INTEREST_RATE; // 千分比
@@ -354,6 +359,17 @@ contract NFTPool is NFTWrapper {
         return interest;
     }
 
+    function updatePower(address _sender, uint _weight) public onlyAuth override {
+        require(endTime > block.timestamp, "stake: endTime > block.timestamp");
+        // update firstStakeTime & endTime at the first user stake
+        if (0 == firstStakeTime) {
+            firstStakeTime = block.timestamp;
+            endTime = firstStakeTime + POOL_LIFE_CYCLE;
+        }
+        // 更新矿池累计每股派息和用户利息
+        updateInterest(_sender);
+        super.updatePower(_sender, _weight);
+    }
 
     ///////////////////////////////// admin function /////////////////////////////////
     event AdminWithdrawNFT(address indexed _addr, address operator, address indexed to, uint indexed tokenId);

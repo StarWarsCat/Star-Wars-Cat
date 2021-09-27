@@ -31,7 +31,7 @@ contract NFTCatActive is BaseUpgradeable, XYZConfig {
     using EnumerableSet for EnumerableSet.AddressSet;
     address public feeTo;
 
-    uint constant unactiveFee = 10_0000 * 1e9;
+    uint constant unactiveFee = 10_0000 * 1e18;
 
     event Unactive(address _sender, uint[] _catslotIds);
     event Active(address _sender, uint[] _catslotIds);
@@ -95,7 +95,11 @@ contract NFTCatActive is BaseUpgradeable, XYZConfig {
     function reduceActiveData(uint[6][10] memory _data, uint _grade, uint _stype, uint _power) internal pure returns(uint[6][10] memory) {
         _data[_grade][_stype] = _data[_grade][_stype].sub(1);
         _data[_grade][4] = _data[_grade][4].sub(1);
-        _data[_grade][5] = _data[_grade][5].sub(_power);
+        if (_data[_grade][5] < _power) {
+            _data[_grade][5] = 0;
+        } else {
+            _data[_grade][5] = _data[_grade][5].sub(_power);
+        }
         _data[0][_stype] = _data[0][_stype].sub(1);
         _data[0][4] = _data[0][4].sub(1);
 

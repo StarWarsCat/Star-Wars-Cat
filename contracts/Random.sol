@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract Random is Initializable {
     uint public seed;
-    uint constant MOD = 1e9;
+    uint constant MOD = 1e18;
 
     function __Random_init() public initializer {
         seed = uint160(address(this)) % MOD;

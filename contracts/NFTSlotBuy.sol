@@ -45,12 +45,16 @@ contract NFTSlotBuy is Random, DivToken, XYZConfig {
         auth[msg.sender] = true;
         payToken = _payToken;
 
-        buySlot_coin = [500 * 1e9, 1200 * 1e9, 2000 * 1e9, 4000 * 1e9, 10000 * 1e9, 50000 * 1e9];
+        buySlot_coin = [500 * 1e18, 1200 * 1e18, 2000 * 1e18, 4000 * 1e18, 10000 * 1e18, 50000 * 1e18];
         slot_stype_rate = [30, 20, 20, 30];
     }
 
     function setPayToken(address _payToken) external onlyAdmin {
         payToken = _payToken;
+    }
+
+    function setXYZConfig(bool _production) external onlyAdmin {
+        XYZConfig.initConfig(_production);
     }
 
     // 生成一个NFT结构数据
@@ -94,11 +98,11 @@ contract NFTSlotBuy is Random, DivToken, XYZConfig {
             // 扣费cp
             uint256 _amount = buySlot_coin[_lv - 1].mul(_num);
             IERC20(payToken).transferFrom(msg.sender, address(this), _amount);
-            DivToPeopleCP(_amount);
+//            DivToPeopleCP(_amount);
         } else { //bnb购买
             uint256 _amount = msg.value;
             require(buySlot_bnb[_lv - 1].mul(_num) == _amount, "bnb not enough");
-            DivToPeopleEth(_amount);
+//            DivToPeopleEth(_amount);
         }
 
         for(uint i = 0; i < _num; i++) {

@@ -18,6 +18,7 @@ interface ICat {
         uint16 hp; // 生命值
         uint16 atk; // 攻击力
         uint16 def; // 防御
+        uint initPower; // 原始算力
     }
 
     function currentTokenId() external view returns (uint);
@@ -71,6 +72,10 @@ interface IGoods {
         bool delayStart;
         address initialOwner;
         address owner;
+        uint step; // 1幼年 2成年
+        uint16 hp; // 生命值
+        uint16 atk; // 攻击力
+        uint16 def; // 防御
     }
 
     function currentTokenId() external view returns (uint);

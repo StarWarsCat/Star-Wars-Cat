@@ -103,7 +103,7 @@ contract NFTCatHome is XYZConfig, BaseUpgradeable, Random {
         require(_grade > 0 && _grade < 11, "_grade > 0 && _grade < 11");
 
         // 扣除投食费用
-        uint feedFee = _times.mul(1e9);
+        uint feedFee = _times.mul(1e18);
         shopAddr.delItem(msg.sender, catFood, feedFee);
 
         feedReward = feedReward.add(feedFee.mul(70).div(100));  // 领养奖池

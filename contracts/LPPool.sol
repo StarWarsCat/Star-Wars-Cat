@@ -28,6 +28,9 @@ contract LPTokenWrapper is BaseUpgradeable {
 //    }
 
     function __LPTokenWrapper_init(address _kSwapLP, address _aToken) public initializer {
+        require(_kSwapLP != address(0), "_kSwapLP != address(0)");
+        require(_aToken != address(0), "_aToken != address(0)");
+
         kSwapLP = _kSwapLP;
         aToken = _aToken;
     }
@@ -37,6 +40,8 @@ contract LPTokenWrapper is BaseUpgradeable {
      * @param _kSwapLP kSwapLP Token contract address
      */
     function setKSwapLP(address _kSwapLP) external onlyAdmin returns (bool) {
+        require(_kSwapLP != address(0), "_kSwapLP != address(0)");
+
         kSwapLP = _kSwapLP;
         return true;
     }
@@ -46,6 +51,8 @@ contract LPTokenWrapper is BaseUpgradeable {
      * @param _aToken AToken contract address
      */
     function setAToken(address _aToken) external onlyAdmin returns (bool) {
+        require(_aToken != address(0), "_aToken != address(0)");
+
         aToken = _aToken;
         return true;
     }
@@ -91,7 +98,7 @@ contract LPPool is LPTokenWrapper, Random, XYZConfig {
     uint constant CYCLE_TIMES = POOL_LIFE_CYCLE / INTEREST_CYCLE;
     uint INTEREST_RATE = 800; // 千分比 衰减系数
 
-    uint constant DECIMALS = 10 ** 9;
+    uint constant DECIMALS = 10 ** 18;
     // uint constant TOTAL_INTEREST = 6999993 * DECIMALS;
     // mint BToken amount each week
     uint INTEREST_BASE_AMOUNT = 1617034 * DECIMALS;
@@ -240,10 +247,10 @@ contract LPPool is LPTokenWrapper, Random, XYZConfig {
             ICat(aToken).mintOnlyBy(msg.sender, ti.tokenId, ti);
         }
 
-        return _cp.sub(catNum.mul(boxCP));
+        return catNum.mul(boxCP);
     }
 
-    function withdrawReward() public checkStart {
+    function withdrawReward() public checkStart onlyExternal {
         // 更新矿池累计每股派息和用户利息
         updateInterest();
 

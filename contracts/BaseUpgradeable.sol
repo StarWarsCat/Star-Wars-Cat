@@ -8,10 +8,12 @@ abstract contract BaseUpgradeable is Initializable {
     bool public isPaused;
     bool private locked;
     address public admin;
+    address public adminPending;
     // auth account
     mapping(address => bool) public auth;
 
     event SetAdmin(address newAdmin);
+    event SetAdminPending(address newAdminPending);
     event SetAuth(address account, bool authState);
     event SetIsPaused(bool isPaused);
 
@@ -52,10 +54,18 @@ abstract contract BaseUpgradeable is Initializable {
         _;
     }
 
-    function setAdmin(address _admin) external onlyAdmin {
-        admin = _admin;
+    function setAdminPending(address _adminPending) external onlyAdmin {
+        adminPending = _adminPending;
 
-        emit SetAdmin(_admin);
+        emit SetAdminPending(_adminPending);
+    }
+
+    function acceptAdmin() external {
+        require(msg.sender == adminPending && msg.sender != address(0), "admin != adminPending");
+        admin = adminPending;
+        adminPending = address(0);
+
+        emit SetAdmin(admin);
     }
 
     function setAuth(address _account, bool _authState) external onlyAdmin {

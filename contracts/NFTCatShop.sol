@@ -25,8 +25,8 @@ contract NFTCatShop is BaseUpgradeable, XYZConfig {
 //    constructor(address _payToken, bool _product) XYZConfig(_product) {
 //        payToken = IERC20(_payToken);
 //
-//        shopItems[catFood] = 10_0000 * 1e9;
-//        exchangeItems[catFood] = 9_0000 * 1e9;
+//        shopItems[catFood] = 10_0000 * 1e18;
+//        exchangeItems[catFood] = 9_0000 * 1e18;
 //
 //        auth[msg.sender] = true;
 //    }
@@ -36,8 +36,8 @@ contract NFTCatShop is BaseUpgradeable, XYZConfig {
 
         payToken = IERC20(_payToken);
 
-        shopItems[catFood] = 10_0000 * 1e9;
-        exchangeItems[catFood] = 9_0000 * 1e9;
+        shopItems[catFood] = 10_0000 * 1e18;
+        exchangeItems[catFood] = 9_0000 * 1e18;
 
         auth[msg.sender] = true;
     }
@@ -73,16 +73,16 @@ contract NFTCatShop is BaseUpgradeable, XYZConfig {
         payToken.transferFrom(msg.sender, address(this), shopItems[_id].mul(_num));
 
         // 给玩家增加道具
-        userItems[msg.sender][_id] = userItems[msg.sender][_id].add(_num * 1e9);
+        userItems[msg.sender][_id] = userItems[msg.sender][_id].add(_num * 1e18);
 
         emit BUY(msg.sender, _id, _num);
     }
 
     function exchange(uint _id, uint _num) external lock notPaused onlyExternal {
-        require(exchangeItems[_id] > 0, "shopItems[_id] > 0");
+        require(exchangeItems[_id] > 0, "exchangeItems[_id] > 0");
 
         // 给玩家扣道具
-        userItems[msg.sender][_id] = userItems[msg.sender][_id].sub(_num * 1e9);
+        userItems[msg.sender][_id] = userItems[msg.sender][_id].sub(_num * 1e18);
 
         // 扣费
         payToken.transfer(msg.sender, exchangeItems[_id].mul(_num));

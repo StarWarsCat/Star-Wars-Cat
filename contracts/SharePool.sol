@@ -59,7 +59,7 @@ contract SharePool is BaseUpgradeable {
     }
 
     // 每天0点后台触发 把当天手续费转移过来 并分红
-    function updateAccShare() external notPaused {
+    function updateAccShare() external notPaused onlyExternal {
         require(msg.sender == cpFeeAddr, "msg.sender == cpFeeAddr");
         uint amount = payToken.balanceOf(msg.sender);
         payToken.transferFrom(msg.sender, address(this), amount);

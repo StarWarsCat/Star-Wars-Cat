@@ -14,7 +14,9 @@ contract XYZConfig is Initializable {
     uint[6] public buySlot_bnb;
 
     // 同等级猫各种系列的概率
-    uint[] public cat_stype_rate;
+    uint[] public cat_stype_rate1;  // 1星
+    uint[] public cat_stype_rate2;  // 2星
+    uint[] public cat_stype_rate3;  // 3星
     // 产出母猫概率
     uint public female_cat_rate;
 
@@ -41,12 +43,11 @@ contract XYZConfig is Initializable {
     //    }
 
     function __XYZConfig_init(bool _production) public initializer {
-        pregnancyFee = [[0.1 ether, 0.2 ether, 0.3 ether, 0.4 ether, 0.5 ether], [0.1 ether, 0.2 ether, 0.3 ether, 0.4 ether, 0.5 ether]];
-        exchange_coin = [0.3 ether, 0.8 ether, 2 ether, 3 ether];
-        buySlot_bnb = [0.01 ether, 0.024 ether, 0.8 ether, 0.2 ether, 1 ether, 1 ether];
-        cat_stype_rate = [40, 30, 20, 10];
+        cat_stype_rate1 = [40, 30, 20, 10];
+        cat_stype_rate2 = [30, 30, 20, 20];
+        cat_stype_rate3 = [20, 30, 25, 25];
         female_cat_rate = 20;
-        basePower = [0.1 * 1e9, 0.5 * 1e9, 2.5 * 1e9, 5 * 1e9, 250 * 1e9, 250 * 1e9, 2.5 * 1e9];
+        basePower = [0.1 * 1e18, 0.5 * 1e18, 2.5 * 1e18, 5 * 1e18, 275 * 1e18, 275 * 1e18];
         totalAddPowerPercent = [[uint(50), 10], [uint(100), 50], [uint(300), 100], [uint(500), 200], [uint(1000), 400]];
         addPowerPercent[1] = [[uint(16), 63], [uint(80), 125], [uint(160), 250], [uint(320), 500]];
         addPowerPercent[2] = [[uint(8), 125], [uint(40), 250], [uint(80), 500], [uint(160), 1000]];
@@ -59,7 +60,6 @@ contract XYZConfig is Initializable {
         addGradePowerPercent[2] = 1500;
         addGradePowerPercent[3] = 1500;
         addGradePowerPercent[4] = 1500;
-        homeInterval = 1 hours;
         initConfig(_production);
     }
 
@@ -68,9 +68,16 @@ contract XYZConfig is Initializable {
             // 测试环境
             homeInterval = 5 minutes;
 
-            buySlot_bnb = [0.0001 ether, 0.0005 ether, 0.001 ether, 0.025 ether, 0.3 ether, 0.3 ether];
-            exchange_coin = [0.003 ether, 0.008 ether, 0.02 ether, 0.03 ether];
-            pregnancyFee = [[0.001 ether, 0.002 ether, 0.003 ether, 0.004 ether, 0.005 ether], [0.001 ether, 0.002 ether, 0.003 ether, 0.004 ether, 0.005 ether]];
+            buySlot_bnb = [0.0001 ether, 0.00024 ether, 0.0008 ether, 0.002 ether, 0.01 ether, 0.01 ether];
+            exchange_coin = [0.003 ether, 0.005 ether, 0.008 ether, 0.012 ether];
+            pregnancyFee = [[0.0003 ether, 0.0005 ether, 0.0008 ether, 0.0012 ether, 0.0018 ether], [0.0005 ether, 0.0008 ether, 0.0012 ether, 0.0018 ether, 0.0025 ether]];
+        } else {
+            // 正式环境
+            homeInterval = 1 hours;
+
+            buySlot_bnb = [0.01 ether, 0.024 ether, 0.08 ether, 0.2 ether, 1 ether, 1 ether];
+            exchange_coin = [0.3 ether, 0.5 ether, 0.8 ether, 1.2 ether];
+            pregnancyFee = [[0.03 ether, 0.05 ether, 0.08 ether, 0.12 ether, 0.18 ether], [0.05 ether, 0.08 ether, 0.12 ether, 0.18 ether, 0.25 ether]];
         }
     }
 }

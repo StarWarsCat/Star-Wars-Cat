@@ -125,6 +125,10 @@ contract NFTCatExchange is ExchangeDivToken, Random, XYZConfig {
         randValues = [1,2,3,4,5,6,7,8,9,10];
     }
 
+    function setXYZConfig(bool _production) external onlyAdmin {
+        XYZConfig.initConfig(_production);
+    }
+
     // 设置兑换开启到底基层
     function setCanExchangeNum(uint8 _i) external notPaused onlyExternal returns (bool) {
         can_exchange_num = _i;
@@ -225,14 +229,19 @@ contract NFTCatExchange is ExchangeDivToken, Random, XYZConfig {
         uint grade = getGrade(_lv);
         ti.grade = uint8(grade);
         ti.sex = uint8(genSex(grade));
-        if (_lv < 4) {
-            ti.stype = uint8(rand_weight(cat_stype_rate)); // 随机猫属于哪个系列
+        if (_lv == 1) {
+            ti.stype = uint8(rand_weight(cat_stype_rate1)); // 随机猫属于哪个系列
+        } else if (_lv == 2) {
+            ti.stype = uint8(rand_weight(cat_stype_rate2));
+        } else if (_lv == 3) {
+            ti.stype = uint8(rand_weight(cat_stype_rate3));
         } else {
             ti.stype = 0;
         }
 
         ti.tokenId = genTokenId(grade);
         ti.power = basePower[ti.grade - 1];
+        ti.initPower = basePower[ti.grade - 1];
 
         // 猫王猫后直接成年
         if (grade == 5 || grade == 6) {
@@ -335,7 +344,7 @@ contract NFTCatExchange is ExchangeDivToken, Random, XYZConfig {
         }
 
         // 分钱
-        DivToPeopleEth(_amount);
+//        DivToPeopleEth(_amount);
 
         return true;
     }
