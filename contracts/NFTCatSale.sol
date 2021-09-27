@@ -193,7 +193,7 @@ contract NFTCatSale is DivToken {
                 require(finalprice + tax <= address(this).balance, "finalprice + tax == address(this).balance");
                 payable(goods.initialOwner).transfer(finalprice);
                 payable(feeTo).transfer(tax);
-//                DivToPeopleEth(tax);
+                DivToPeopleEth(tax);
             } else {
                 payToken.transfer(goods.initialOwner, finalprice);
                 payToken.transfer(feeTo, tax);

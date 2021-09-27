@@ -146,11 +146,11 @@ contract NFTCatBorn is Random, DivToken, XYZConfig {
     }
 
     // 怀孕
-    function pregnancy(uint _mother, uint _rate, uint _femaleRate) external lock notPaused payable returns (bool) {
+    function pregnancy(uint _mother, uint _rate, uint _femaleRate) external payable notPaused onlyExternal returns (bool) {
         require(_rate > 0 && _rate < 6, "_rate > 0 && _rate < 6");
         require(_femaleRate >= 0 && _femaleRate < 6, "_femaleRate >= 0 && _femaleRate < 6");
 
-        // 判断麻麻是否存在 是否是母猫 是否是主人 是否等级一致
+        // 判断妈妈是否存在 是否是母猫 是否是主人
         ICat.TokenInfo memory mon = catAddr.getTokenInfo(_mother);
         require(mon.sex == FEMALE, "mon.sex == FEMALE");
         require(msg.sender == catAddr.ownerOf(_mother), "msg.sender == catAddr.ownerOf(_mother)");
@@ -166,9 +166,8 @@ contract NFTCatBorn is Random, DivToken, XYZConfig {
         // 只有成年母猫才可以
         require(mon.step == STEP_AUDLT, "mon.step == STEP_AUDLT");
 
-        uint256 amount = msg.value;
-        require(pregnancyFee[mon.grade - 3][_rate - 1] == amount, "bnb not enough");
-//        DivToPeopleEth(amount);
+        require(pregnancyFee[mon.grade - 3][_rate - 1] <= msg.value, "bnb not enough");
+        DivToPeopleEth(msg.value);
 
         // 增加生出母猫概率
         uint femaleRate = female_cat_rate;
@@ -186,13 +185,15 @@ contract NFTCatBorn is Random, DivToken, XYZConfig {
 
             // 生成孕期小猫数据
             uint _sex = genSex(femaleRate);
-            uint _stype = 0;
+            uint _stype;
             if (mon.grade == 1) {
                 _stype = uint8(rand_weight(cat_stype_rate1)); // 随机猫属于哪个系列
             } else if (mon.grade == 2) {
                 _stype = uint8(rand_weight(cat_stype_rate2));
             } else if (mon.grade == 3) {
                 _stype = uint8(rand_weight(cat_stype_rate3));
+            } else {
+                _stype = 0;
             }
 
             BabyInfo memory c = genBaby(msg.sender, _mother, _stype, _sex, mon);

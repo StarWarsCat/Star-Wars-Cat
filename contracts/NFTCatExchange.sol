@@ -21,26 +21,26 @@ contract ExchangeDivToken is BaseUpgradeable {
     // todo
     function IniPeople() internal {
         // 编号	比例	地址
-        PeopleAddressOf[1] = 0x2D899D21dc5Ee8bF7dA798555b26EF3828cB8309;
-        PeoplePer10000Of[1] = 5000;
+        PeopleAddressOf[1] = 0xC78be2f6a4bd79e098806Bb91343Ca11d885d1f6;
+        PeoplePer10000Of[1] = 700;
 
-        PeopleAddressOf[2] = 0x8eE54B97941A09b6D5E40A9884d4150b09cfac9B;
-        PeoplePer10000Of[2] = 1000;
+        PeopleAddressOf[2] = 0x926e7ee0Eb81266f80d434805c88a4c0043a2D59;
+        PeoplePer10000Of[2] = 700;
 
-        PeopleAddressOf[3] = 0x26e2bC1fd8F30aC51cF9D315c091d3a4e6d2672a;
-        PeoplePer10000Of[3] = 600;
+        PeopleAddressOf[3] = 0xd9eda60883ac4E880593E43047E3b1AAA331bd23;
+        PeoplePer10000Of[3] = 5000;
 
-        PeopleAddressOf[4] = 0x6e81CAb335A40f3690F6ba86C3B18D95e107d2aC;
-        PeoplePer10000Of[4] = 1500;
+        PeopleAddressOf[4] = 0x57659746d9c6942259C6b4f34189CBB7A4983932;
+        PeoplePer10000Of[4] = 1200;
 
-        PeopleAddressOf[5] = 0x22e04b93E75634b6F350844B5F7Bcab5775fdD80;
-        PeoplePer10000Of[5] = 900;
+        PeopleAddressOf[5] = 0x0ef3EbC0CdF81c7fBC08B4Abd382F20F5Ec2Ef5A;
+        PeoplePer10000Of[5] = 400;
 
-        PeopleAddressOf[6] = 0x366034a33B3A4609d56FF494172E1c469dd83e5a;
+        PeopleAddressOf[6] = 0x26e2bC1fd8F30aC51cF9D315c091d3a4e6d2672a;
         PeoplePer10000Of[6] = 500;
 
-        PeopleAddressOf[7] = 0x801EE97e899d78024d0bbC2fD7f1Ac7919415B54;
-        PeoplePer10000Of[7] = 500;
+        PeopleAddressOf[7] = 0x6e81CAb335A40f3690F6ba86C3B18D95e107d2aC;
+        PeoplePer10000Of[7] = 1500;
 
         PeopleCount = 7;
 
@@ -333,7 +333,7 @@ contract NFTCatExchange is ExchangeDivToken, Random, XYZConfig {
         }
 
         uint256 _amount = msg.value;
-        require(exchange_coin[_lv - 1].mul(_num) == _amount, "bnb not enough");
+        require(exchange_coin[_lv - 1].mul(_num) <= _amount, "bnb not enough");
 
         // 判断是否还有足够多的盲盒够兑换
         uint _rest_can_exchange = (blind_box_num[_lv - 1] / layer_num * can_exchange_num).sub(open_box_num[_lv - 1]);
@@ -344,7 +344,7 @@ contract NFTCatExchange is ExchangeDivToken, Random, XYZConfig {
         }
 
         // 分钱
-//        DivToPeopleEth(_amount);
+        DivToPeopleEth(_amount);
 
         return true;
     }

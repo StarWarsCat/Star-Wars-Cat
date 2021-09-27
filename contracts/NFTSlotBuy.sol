@@ -45,7 +45,7 @@ contract NFTSlotBuy is Random, DivToken, XYZConfig {
         auth[msg.sender] = true;
         payToken = _payToken;
 
-        buySlot_coin = [500 * 1e18, 1200 * 1e18, 2000 * 1e18, 4000 * 1e18, 10000 * 1e18, 50000 * 1e18];
+        buySlot_coin = [500 * 1e18, 1200 * 1e18, 4000 * 1e18, 10000 * 1e18, 50000 * 1e18, 50000 * 1e18];
         slot_stype_rate = [30, 20, 20, 30];
     }
 
@@ -102,7 +102,7 @@ contract NFTSlotBuy is Random, DivToken, XYZConfig {
         } else { //bnb购买
             uint256 _amount = msg.value;
             require(buySlot_bnb[_lv - 1].mul(_num) == _amount, "bnb not enough");
-//            DivToPeopleEth(_amount);
+            DivToPeopleEth(_amount);
         }
 
         for(uint i = 0; i < _num; i++) {

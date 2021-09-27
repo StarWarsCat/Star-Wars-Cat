@@ -190,7 +190,7 @@ contract GuessGame is BaseUpgradeable, XYZConfig {
 
     // 领取奖励
     function fetch(uint _id) external lock {
-        guessData storage _d = gameData[currentID];
+        guessData storage _d = gameData[_id];
 
         uint reward = 0;
         if (_d.preVal == _d.finalVal) {
