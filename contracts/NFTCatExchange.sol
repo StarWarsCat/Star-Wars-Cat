@@ -323,7 +323,6 @@ contract NFTCatExchange is ExchangeDivToken, Random, XYZConfig {
         require(catAddr.royalTokenId() > 0, "catAddr.royalTokenId() > 0");
         require(_num > 0 && _num < 100, "_num > 0 && _num < 100");
         require(_lv > 0 && _lv < 5, "_lv > 0 && _lv < 5");
-        require(msg.sender == tx.origin, "msg.sender == tx.origin");            //不支持合约调用
         require(isStart, "need start exchange");
 
         // 皇室猫，每个地址最多抢购两只

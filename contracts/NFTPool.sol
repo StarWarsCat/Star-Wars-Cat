@@ -126,7 +126,7 @@ contract NFTPool is NFTWrapper {
     // 矿池产出衰减周期
     uint constant INTEREST_CYCLE = 3 hours;
     // 矿池生命周期
-    uint constant POOL_LIFE_CYCLE = 3000 days;
+    uint constant POOL_LIFE_CYCLE = 300 days;
     // 矿池产出衰减期数
     uint constant CYCLE_TIMES = POOL_LIFE_CYCLE / INTEREST_CYCLE;
 

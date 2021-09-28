@@ -149,7 +149,8 @@ contract NFTCatSale is DivToken {
             if (goods.priceType == PRICE_TYPE_BNB) {
                 require(goods.price <= address(this).balance, "_price == address(this).balance");
                 payable(goods.initialOwner).transfer(finalprice);
-                payable(feeTo).transfer(tax);
+//                payable(feeTo).transfer(tax);
+                DivToPeopleEth(tax);
             } else {
                 payToken.transferFrom(msg.sender, goods.initialOwner, finalprice);
                 payToken.transferFrom(msg.sender, feeTo, tax);
@@ -192,7 +193,7 @@ contract NFTCatSale is DivToken {
             if (goods.priceType == PRICE_TYPE_BNB) {
                 require(finalprice + tax <= address(this).balance, "finalprice + tax == address(this).balance");
                 payable(goods.initialOwner).transfer(finalprice);
-                payable(feeTo).transfer(tax);
+//                payable(feeTo).transfer(tax);
                 DivToPeopleEth(tax);
             } else {
                 payToken.transfer(goods.initialOwner, finalprice);

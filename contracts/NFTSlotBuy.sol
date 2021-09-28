@@ -91,7 +91,6 @@ contract NFTSlotBuy is Random, DivToken, XYZConfig {
     function buySlot(uint _num, uint _lv, uint _type) external lock notPaused onlyExternal payable returns (bool) {
         require(_num > 0 && _num < 100, "_num > 0 && _num < 100");
         require(_lv > 0 && _lv < 7, "_lv > 0 && _lv < 7");
-        require(msg.sender == tx.origin, "msg.sender == tx.origin");            //不支持合约调用
         require(_type == MONEY_TYPE_CP || _type == MONEY_TYPE_BNB, "_type == MONEY_TYPE_CP || _type == MONEY_TYPE_BNB");
 
         if (_type == MONEY_TYPE_CP) {
@@ -101,7 +100,7 @@ contract NFTSlotBuy is Random, DivToken, XYZConfig {
 //            DivToPeopleCP(_amount);
         } else { //bnb购买
             uint256 _amount = msg.value;
-            require(buySlot_bnb[_lv - 1].mul(_num) == _amount, "bnb not enough");
+            require(buySlot_bnb[_lv - 1].mul(_num) <= _amount, "bnb not enough");
             DivToPeopleEth(_amount);
         }
 

@@ -27,8 +27,8 @@ contract SharePool is BaseUpgradeable {
     IERC721 public catAddr;
 
     uint constant kingPercent = 20; //  猫王猫后20% 分红
-    uint constant cat4Percent = 20; // 皇室猫20% 分红(如果没有 则给猫王猫后分)
-    uint constant cat3Percent = 60; // 未来猫60% 分红
+    uint constant cat4Percent = 45; // 皇室猫45% 分红(如果没有 则给猫王猫后分)
+    uint constant cat3Percent = 35; // 未来猫35% 分红
 
 //    constructor(address _payToken, address _catAddr, address _cpFeeAddr) {
 //        payToken = IERC20(_payToken);
