@@ -23,6 +23,7 @@ contract NFTCatHome is XYZConfig, BaseUpgradeable, Random {
 
     uint public feedReward; // 投食奖励
     uint public currentID;
+    uint public currentFoodID;
 
     uint public foodReward; // 猫粮奖励
     uint[2][] public foodPerson;
@@ -33,21 +34,55 @@ contract NFTCatHome is XYZConfig, BaseUpgradeable, Random {
 
     uint[] public canFeedGrade;
 
+    //////////// 领养奖池
     struct phaseData {
-        uint grade; // 投食中奖系列ID
+        uint grade; // 领养奖池中奖系列ID
         uint[10] feedData; // 投食总数
         uint feedAward; // 投食奖励
         uint feedPerson; // 投食人数
-        uint foodAward; // 猫粮奖励
-        address foodAwardAddr; // 猫粮奖励地址
+
         mapping(address => uint[10]) feedInfo; // 玩家投食明细
-        mapping(address => bool) gotRewardsAddr; // 已领取奖励地址
+        mapping(address => bool) gotFeedRewardsAddr; // 已领取领养奖池奖励地址
+
     }
     mapping(uint => phaseData) private phase; // 每一期的结果数据
 
-    event FETCH(address indexed _sender, uint _id, uint _award, uint _foodAward);
+
+    // 猫咪中奖记录
+    struct hisData {
+        uint id; // 期数
+        uint grade; // 投食中奖系列ID
+        uint[10] feedData; // 投食总数
+        uint[10] myFeedData; // 我的投食总数
+        uint feedAward; // 投食奖励
+        bool gotFeedReward; // 已领取领养奖池奖励地址
+    }
+
+    //////////// 投喂奖池（每投喂100次开奖）
+    struct foodPhaseData {
+        uint foodAward; // 猫粮奖励
+        uint myFoodNum; // 我的投食总数
+        uint foodTotal; // 总的投食总数
+        address foodAwardAddr; // 猫粮奖励地址
+        bool gotFoodReward; //是否已领取投喂奖池奖励
+        mapping(address => uint) foodNum; // 玩家投食总数
+    }
+    mapping(uint => foodPhaseData) private foodPhase; // 每一期的结果数据
+
+    // 返回每100期中奖记录
+    struct foodHisData {
+        uint id; // 期数
+        uint foodAward; // 猫粮奖励
+        uint myFoodNum; // 我的投食总数
+        uint foodTotal; // 总的投食总数
+        address foodAwardAddr; // 猫粮奖励地址
+        bool gotFoodReward; //是否已领取投喂奖池奖励
+    }
+
+    event FETCH(address indexed _sender, uint[] _ids);
     event OPENRWARDS(uint _id, uint _grade);
     event FEED(address indexed _sender, uint _grade, uint _times);
+    event FEEDAWARDFETCH(address indexed _sender, uint[] _ids);
 
 //    constructor(address _catAddr, address _shopAddr, address _feeTo, bool _product) XYZConfig(_product) {
 //        catAddr = ICat(_catAddr);
@@ -58,7 +93,7 @@ contract NFTCatHome is XYZConfig, BaseUpgradeable, Random {
 //        auth[msg.sender] = true;
 //    }
 
-    function __NFTCatHome_init(address _catAddr, address _shopAddr, address _feeTo, bool _product) public initializer {
+    function initialize(address _catAddr, address _shopAddr, address _feeTo, bool _product) public initializer {
         BaseUpgradeable.__Base_init();
         XYZConfig.__XYZConfig_init(_product);
         Random.__Random_init();
@@ -67,27 +102,46 @@ contract NFTCatHome is XYZConfig, BaseUpgradeable, Random {
         feeTo = _feeTo;
         endTime = block.timestamp.div(homeInterval).add(1).mul(homeInterval) - 300;
         currentID = 1;
+        currentFoodID = 1;
         auth[msg.sender] = true;
         feedReward = 0; // 领养奖池
         foodReward = 0; // 投喂奖池
         foodTotal = 0; // 猫粮抽奖的权重总数
-        canFeedGrade = [1, 2, 3, 4, 7];
+        canFeedGrade = [1, 2, 3, 4];
     }
 
     function setCanFeedGrade(uint[] memory _data) external onlyAdmin {
         canFeedGrade = _data;
     }
 
+    function setEndTime(uint _endTime) external onlyAdmin {
+        endTime = _endTime;
+    }
+
+    // 查看奖池
+    function getfoodPersonNum() external view returns (uint, uint) {
+        uint mySum = 0;
+        for (uint j = 0; j < foodPerson.length; j++) {
+            if (msg.sender == address(uint160(foodPerson[j][0]))) {
+                mySum = mySum.add(foodPerson[j][1]);
+            }
+        }
+
+        return (foodPerson.length, mySum);
+    }
+
     function giveFoodReward(uint _seed) internal {
         // 达到100次 抽奖
         uint _rand = uint(keccak256(abi.encodePacked(_seed, msg.sender, block.timestamp, block.coinbase, gasleft()))) % foodTotal;
         uint _sum = 0;
+
         for (uint i = 0; i < foodPerson.length; i++) {
             _sum = _sum.add(foodPerson[i][1]);
             if (_sum > _rand) {
-                phaseData storage _d = phase[currentID];
-                _d.foodAward = foodReward;
-                _d.foodAwardAddr = address(uint160(foodPerson[i][0]));
+                foodPhaseData storage _fd = foodPhase[currentFoodID];
+                _fd.foodAward = foodReward;
+                _fd.foodTotal = foodTotal;
+                _fd.foodAwardAddr = address(uint160(foodPerson[i][0]));
 
                 // 清空猫粮奖励
                 foodReward = 0;
@@ -95,6 +149,7 @@ contract NFTCatHome is XYZConfig, BaseUpgradeable, Random {
                 foodTotal = 0;
             }
         }
+        currentFoodID = currentFoodID.add(1);
     }
 
     function feed(uint _grade, uint _times) external lock notPaused onlyExternal {
@@ -102,7 +157,7 @@ contract NFTCatHome is XYZConfig, BaseUpgradeable, Random {
         require(_times > 0, "_times > 0");
         require(_grade > 0 && _grade < 11, "_grade > 0 && _grade < 11");
 
-        // 扣除投食费用
+        // 扣除投食份数
         uint feedFee = _times.mul(1e18);
         shopAddr.delItem(msg.sender, catFood, feedFee);
 
@@ -150,23 +205,29 @@ contract NFTCatHome is XYZConfig, BaseUpgradeable, Random {
         endTime = block.timestamp.div(homeInterval).add(2).mul(homeInterval) - 300;
     }
 
-    // 查询当前一期状态  当前期数  结束时间  投食人数
-    function query() external view returns (uint, uint, uint, uint[10] memory, uint[10] memory, uint) {
+    // 查看奖池
+    function getReward() external view returns (uint[2] memory) {
+        return [feedReward, foodReward];
+    }
+
+    // 查看当前期数
+    function getID() external view returns (uint[2] memory) {
+        return [currentID, currentFoodID];
+    }
+
+    // 查询当前一期状态  当前期数  结束时间  投食人数 玩家投食明细 投食总数
+    function query() external view returns (uint, uint, uint, uint[10] memory, uint[10] memory) {
         return (currentID, endTime, phase[currentID].feedPerson, phase[currentID].feedInfo[msg.sender],
-            phase[currentID].feedData, feedReward);
+            phase[currentID].feedData);
     }
 
-    struct hisData {
-        uint id; // 期数
-        uint[10] feedData; // 投食总数
-        uint[10] myFeedData; // 我的投食总数
-        uint feedAward; // 投食奖励
-        uint foodAward; // 猫粮奖励
-        address foodAwardAddr; // 猫粮奖励地址
-        bool gotReward; //是否已领取奖励
+    function testqq() external view returns (uint) {
+        uint foodTotal = 103;
+        uint _rand = uint(keccak256(abi.encodePacked(foodTotal, msg.sender, block.timestamp, block.coinbase, gasleft()))) % foodTotal;
+        return _rand;
     }
 
-    // 查询每一期的获奖记录
+    // 查询领养奖池每一期的获奖记录
     function history(uint _start, uint _end) external view returns (hisData[] memory) {
         require(_end < currentID, "_end < currentID");
         require(_end >= _start, "_end >= _start");
@@ -174,40 +235,75 @@ contract NFTCatHome is XYZConfig, BaseUpgradeable, Random {
         hisData[] memory his = new hisData[](_end - _start + 1);
         for (uint i = _start; i < _end + 1; i++) {
             his[i - _start].id = i;
+            his[i - _start].grade = phase[i].grade;
             his[i - _start].feedData = phase[i].feedData;
             his[i - _start].myFeedData = phase[i].feedInfo[msg.sender];
             his[i - _start].feedAward = phase[i].feedAward;
-            his[i - _start].foodAward = phase[i].foodAward;
-            his[i - _start].foodAwardAddr = phase[i].foodAwardAddr;
-            his[i - _start].gotReward = phase[i].gotRewardsAddr[msg.sender];
+            his[i - _start].gotFeedReward = phase[i].gotFeedRewardsAddr[msg.sender];
         }
 
         return his;
     }
 
-    // 领取奖励
-    function fetch(uint _id) external lock notPaused onlyExternal {
-        require(_id < currentID, "_id < currentID");
-        // 还没有领奖
-        require(!phase[_id].gotRewardsAddr[msg.sender], "!phase[_id].gotRewardsAddr[msg.sender]");
 
-        // 判断是否中了猫粮奖励
-        if (phase[_id].foodAwardAddr == msg.sender) {
-            shopAddr.addItem(msg.sender, catFood, phase[_id].foodAward);
+    // 查询投喂奖池每100期的开奖记录
+    function foodHistory(uint _start, uint _end) external view returns (foodHisData[] memory) {
+        require(_end < currentFoodID, "_end < currentFoodID");
+        require(_end >= _start, "_end >= _start");
+
+        foodHisData[] memory fdHis = new foodHisData[](_end - _start + 1);
+        for (uint i = _start; i < _end + 1; i++) {
+            fdHis[i - _start].id = i;
+            fdHis[i - _start].foodAward = foodPhase[i].foodAward;
+            fdHis[i - _start].foodAwardAddr = foodPhase[i].foodAwardAddr;
+            fdHis[i - _start].myFoodNum = foodPhase[i].myFoodNum;
+            fdHis[i - _start].foodTotal = foodPhase[i].foodTotal;
+            fdHis[i - _start].gotFoodReward = foodPhase[i].gotFoodReward;
         }
 
-        // 该期开出的猫系列
-        uint grade = phase[_id].grade;
-        // 玩家该期该系列喂食情况
-        uint userFeed = phase[_id].feedInfo[msg.sender][grade];
-        uint award = 0;
-        if (userFeed > 0) { // 玩家买中了
-            uint sysFeedInfo = phase[_id].feedData[grade];
-            award = phase[_id].feedAward.mul(userFeed).div(sysFeedInfo);
-            shopAddr.addItem(msg.sender, catFood, award);
-            phase[_id].gotRewardsAddr[msg.sender] = true;
-        }
-
-        emit FETCH(msg.sender, _id, award, phase[_id].foodAward);
+        return fdHis;
     }
+
+    // 领取投喂奖池
+    function fetch(uint[] memory _ids) external lock notPaused onlyExternal {
+        for (uint i = 0; i < _ids.length; i++) {
+            uint _id = _ids[i];
+            require(_id < currentFoodID, "_id < currentFoodID");
+            // 还没有领奖
+            require(!foodPhase[_id].gotFoodReward, "not gotFoodReward");
+
+            // 判断是否中了猫粮奖励
+            if (foodPhase[_id].foodAwardAddr == msg.sender) {
+                shopAddr.addItem(msg.sender, catFood, foodPhase[_id].foodAward);
+                foodPhase[_id].gotFoodReward = true;
+            }
+        }
+
+        emit FETCH(msg.sender, _ids);
+    }
+
+    // 领取领养奖池
+    function feedAwardFetch(uint[] memory _ids) external lock notPaused onlyExternal {
+        for (uint i = 0; i < _ids.length; i++) {
+            uint _id = _ids[i];
+            require(_id < currentID, "_id < currentID");
+            // 还没有领奖
+            require(!phase[_id].gotFeedRewardsAddr[msg.sender], "not gotFeedRewardsAddr");
+
+            // 该期开出的猫系列
+            uint grade = phase[_id].grade;
+            // 玩家该期该系列喂食情况
+            uint userFeed = phase[_id].feedInfo[msg.sender][grade];
+            uint award = 0;
+            if (userFeed > 0) { // 玩家买中了
+                uint sysFeedInfo = phase[_id].feedData[grade];  // 该系列投食总数
+                award = phase[_id].feedAward.mul(userFeed).div(sysFeedInfo);
+                shopAddr.addItem(msg.sender, catFood, award);
+                phase[_id].gotFeedRewardsAddr[msg.sender] = true;
+            }
+        }
+
+        emit FEEDAWARDFETCH(msg.sender, _ids);
+    }
+
 }

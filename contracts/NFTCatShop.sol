@@ -31,13 +31,14 @@ contract NFTCatShop is BaseUpgradeable, XYZConfig {
 //        auth[msg.sender] = true;
 //    }
 
-    function __NFTCatShop_init(address _payToken, bool _product) public initializer {
+    function initialize(address _payToken, bool _product) public initializer {
+        BaseUpgradeable.__Base_init();
         XYZConfig.__XYZConfig_init(_product);
 
         payToken = IERC20(_payToken);
 
-        shopItems[catFood] = 10_0000 * 1e18;
-        exchangeItems[catFood] = 9_0000 * 1e18;
+        shopItems[catFood] = 1000 * 1e18;
+        exchangeItems[catFood] = 900 * 1e18;
 
         auth[msg.sender] = true;
     }

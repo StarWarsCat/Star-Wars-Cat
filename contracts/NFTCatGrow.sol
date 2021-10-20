@@ -33,8 +33,8 @@ contract NFTCatGrow is Random, DivToken, XYZConfig {
 
     uint bornSeconds; // 怀孕周期
 
-    uint public feedFee; // 喂食费用
-    uint public speedFee; // 加速费用
+    uint[] public feedFee; // 喂食费用
+    uint[] public speedFee; // 加速费用
     uint public feedInterval; // 喂食间隔
 
     // 喂食
@@ -43,6 +43,7 @@ contract NFTCatGrow is Random, DivToken, XYZConfig {
     event Speed(address _sender, uint[] _tokenIds, uint _fee);
     // 成熟
     event GrowUp(address _sender, uint _tokenid);
+    event GrowUps(address _sender, uint[] _tokenIds);
 
 //    constructor(address _catAddr, address _payToken, address _feeTo, bool _product) DivToken(_payToken) XYZConfig(_product) {
 //        catAddr = ICat(_catAddr);
@@ -50,7 +51,7 @@ contract NFTCatGrow is Random, DivToken, XYZConfig {
 //        feeTo = _feeTo;
 //    }
 
-    function __NFTCatGrow_init(address _catAddr, address _payToken, address _feeTo, address _poolAddr, bool _product) public initializer {
+    function initialize(address _catAddr, address _payToken, address _feeTo, address _poolAddr, bool _product) public initializer {
         DivToken.__DivToken_init(_payToken);
         XYZConfig.__XYZConfig_init(_product);
         Random.__Random_init();
@@ -59,8 +60,8 @@ contract NFTCatGrow is Random, DivToken, XYZConfig {
         feeTo = _feeTo;
         poolAddr = _poolAddr;
         bornSeconds = 10 days; // 怀孕周期
-        feedFee = 300 * 1e18; // 喂食费用
-        speedFee = 800 * 1e18; // 加速费用
+        feedFee = [100 * 1e18, 300 * 1e18, 600 * 1e18, 800 * 1e18]; // 喂食费用
+        speedFee = [100 * 1.5 * 1e18, 300 * 1.5 * 1e18, 600 * 2 * 1e18, 800 * 2 * 1e18]; // 加速费用
         feedInterval = 1 days; // 喂食间隔
         pool = IPool(_poolAddr);
     }
@@ -111,6 +112,7 @@ contract NFTCatGrow is Random, DivToken, XYZConfig {
 
     // 喂食
     function feed(uint[] memory _tokenIds) external lock notPaused onlyExternal returns (bool) {
+        uint allFeedFee = 0;
         for (uint i = 0; i < _tokenIds.length; i++) {
             uint _tokenId = _tokenIds[i];
 
@@ -118,6 +120,9 @@ contract NFTCatGrow is Random, DivToken, XYZConfig {
             require(t.step == STEP_BABY, "t.step == STEP_BABY");
             // 判断当天是否已经喂食过
             require(t.feedTime - feedInterval < block.timestamp, "t.feedTime - 1 days < block.timestamp");
+
+            // 消耗代币
+            allFeedFee = allFeedFee.add(feedFee[t.grade - 1]);
 
             // 在质押中也可以加速
             if (catAddr.ownerOf(_tokenId) != poolAddr) {
@@ -151,6 +156,8 @@ contract NFTCatGrow is Random, DivToken, XYZConfig {
                 checkPower(t.grade, t.stype, addPower);
             }
 
+            t.power = t.initPower.mul(rate);
+
             // 到成年时间了 直接成年
             if (t.feedTime > t.endTime) {
                 t.step = STEP_AUDLT;
@@ -161,22 +168,21 @@ contract NFTCatGrow is Random, DivToken, XYZConfig {
                 emit GrowUp(msg.sender, _tokenId);
             }
 
-            t.power = t.initPower.mul(rate);
-
             catAddr.updateOnlyBy(t.tokenId, t);
 
         }
 
         // 扣除喂食费用
-        payToken.transferFrom(msg.sender, feeTo, feedFee.mul(_tokenIds.length));
+        payToken.transferFrom(msg.sender, feeTo, allFeedFee);
 
-        emit Feed(msg.sender, _tokenIds, feedFee.mul(_tokenIds.length));
+        emit Feed(msg.sender, _tokenIds, allFeedFee);
 
         return true;
     }
 
     // 加速
     function addSpeedTime(uint[] memory _tokenIds, uint _days) external lock notPaused onlyExternal returns (bool) {
+        uint allSpeedFee = 0;
         for (uint i = 0; i < _tokenIds.length; i++) {
             uint _tokenId = _tokenIds[i];
             ICat.TokenInfo memory t = catAddr.getTokenInfo(_tokenId);
@@ -184,13 +190,15 @@ contract NFTCatGrow is Random, DivToken, XYZConfig {
             require(t.step == STEP_BABY, "t.step == STEP_BABY");
             require(_days > 0 && _days < 8, "_days > 0 && _days < 8");
 
+            // 消耗代币
+            allSpeedFee = allSpeedFee.add(speedFee[t.grade - 1].mul(_days));
+
             // 在质押中也可以加速
             if (catAddr.ownerOf(_tokenId) != poolAddr) {
                 // 是否主人
                 require(catAddr.ownerOf(_tokenId) == msg.sender, "t.owner == msg.sender");
             }
 
-            // 已到达生产 无需加速
             require(t.endTime > block.timestamp, "t.endTime > block.timestamp");
 
             // 计算倍数
@@ -213,6 +221,8 @@ contract NFTCatGrow is Random, DivToken, XYZConfig {
                 checkPower(t.grade, t.stype, addPower);
             }
 
+            t.power = t.initPower.mul(rate);
+
             // 到成年时间了 直接成年
             if (t.endTime <= block.timestamp) {
                 t.step = STEP_AUDLT;
@@ -223,15 +233,44 @@ contract NFTCatGrow is Random, DivToken, XYZConfig {
                 emit GrowUp(msg.sender, _tokenId);
             }
 
-            t.power = t.initPower.mul(rate);
-
             catAddr.updateOnlyBy(t.tokenId, t);
         }
 
         // 扣除喂食费用
-        payToken.transferFrom(msg.sender, feeTo, speedFee.mul(_days).mul(_tokenIds.length));
+        payToken.transferFrom(msg.sender, feeTo, allSpeedFee);
 
-        emit Speed(msg.sender, _tokenIds, speedFee.mul(_days).mul(_tokenIds.length));
+        emit Speed(msg.sender, _tokenIds, allSpeedFee);
+
+        return true;
+    }
+
+    // 时间到了成年
+    function growUp(uint[] memory _tokenIds) external lock notPaused onlyExternal returns (bool) {
+        for (uint i = 0; i < _tokenIds.length; i++) {
+            uint _tokenId = _tokenIds[i];
+            ICat.TokenInfo memory t = catAddr.getTokenInfo(_tokenId);
+            require(t.tokenId > 0, "t.tokenId > 0");
+            require(t.step == STEP_BABY, "t.step == STEP_BABY");
+            require(t.endTime <= block.timestamp, "t.endTime <= block.timestamp");
+
+            // 给质押中的增加算力
+            if (catAddr.ownerOf(_tokenId) == poolAddr) {
+                uint addPower = 0;
+                addPower = t.initPower.mul(11) - t.power;
+                checkPower(t.grade, t.stype, addPower);
+            }
+
+            // 成年
+            t.step = STEP_AUDLT;
+            t.endTime = 0;
+            t.feedTime = 0;
+            t.power = t.initPower.mul(11);
+
+            catAddr.updateOnlyBy(t.tokenId, t);
+
+        }
+
+        emit GrowUps(msg.sender, _tokenIds);
 
         return true;
     }

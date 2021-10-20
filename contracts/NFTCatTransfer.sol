@@ -21,7 +21,7 @@ contract NFTCatTransfer is Initializable {
 //        taxAddr = _taxAddr;
 //    }
 
-    function __NFTCatTransfer_init(address _catAddr, address _payToken, address _taxAddr) public initializer {
+    function initialize(address _catAddr, address _payToken, address _taxAddr) public initializer {
         catAddr = ICat(_catAddr);
         payToken = IERC20(_payToken);
         taxAddr = _taxAddr;

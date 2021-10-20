@@ -37,7 +37,7 @@ contract NFTSlotBuy is Random, DivToken, XYZConfig {
 //        payToken = _payToken;
 //    }
 
-    function __NFTSlotBuy_init(address _nft, address _payToken, bool _production) public initializer {
+    function initialize(address _nft, address _payToken, bool _production) public initializer {
         Random.__Random_init();
         DivToken.__DivToken_init(_payToken);
         XYZConfig.__XYZConfig_init(_production);

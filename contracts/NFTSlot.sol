@@ -65,7 +65,7 @@ contract NFTSlot is Context, IERC721, IERC721Ex, BaseUpgradeable {
 //        admin = msg.sender;
 //    }
 
-    function __NFTSlot_init() public initializer {
+    function initialize() public initializer {
         BaseUpgradeable.__Base_init();
 
         _name = "NFTSLOT";

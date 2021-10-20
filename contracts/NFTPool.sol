@@ -124,9 +124,9 @@ contract NFTPool is NFTWrapper {
     }
 
     // 矿池产出衰减周期
-    uint constant INTEREST_CYCLE = 3 hours;
+    uint constant INTEREST_CYCLE = 30 days;
     // 矿池生命周期
-    uint constant POOL_LIFE_CYCLE = 300 days;
+    uint constant POOL_LIFE_CYCLE = 365 days;
     // 矿池产出衰减期数
     uint constant CYCLE_TIMES = POOL_LIFE_CYCLE / INTEREST_CYCLE;
 
@@ -156,9 +156,9 @@ contract NFTPool is NFTWrapper {
 
 //    constructor(address _nft, address _nft2, address _bToken) NFTWrapper(_nft, _nft2, _bToken) {}
 
-    function __NFTPool_init(address _nft, address _nft2, address _bToken) public initializer {
+    function initialize(address _nft, address _nft2, address _bToken) public initializer {
         NFTWrapper.__NFTWrapper_init(_nft, _nft2, _bToken);
-        INTEREST_BASE_AMOUNT = 102400 * DECIMALS;
+        INTEREST_BASE_AMOUNT = 171806449.29545364 * DECIMALS;
         INTEREST_RATE = 800;
         startTime = type(uint).max;
         endTime = type(uint).max;
@@ -173,6 +173,12 @@ contract NFTPool is NFTWrapper {
 
     function setUserActive(address _sender, uint[6][10] memory _data) external onlyAuth notPaused {
         userActive[_sender] = _data;
+    }
+
+    function setInterestBaseAmount(uint num) external onlyAdmin returns (bool) {
+        INTEREST_BASE_AMOUNT = num * DECIMALS;
+
+        return true;
     }
 
     modifier checkStart() {

@@ -67,7 +67,7 @@ contract NFTCat is Context, IERC721, IERC721Ex, BaseUpgradeable {
 //        _symbol = "Cat";
 //        admin = msg.sender;
 //    }
-    function __NFTCat_init() public initializer {
+    function initialize() public initializer {
         BaseUpgradeable.__Base_init();
 
         _name = "NFTCat";

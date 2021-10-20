@@ -37,7 +37,7 @@ contract NFTCatSale is DivToken {
 //        feeTo = _feeTo;
 //    }
 
-    function __NFTCatSale_init(address _catAddr, address _payToken, address _goodsAddr, address _feeTo) public initializer {
+    function initialize(address _catAddr, address _payToken, address _goodsAddr, address _feeTo) public initializer {
         DivToken.__DivToken_init(_payToken);
         catAddr = ICat(_catAddr);
         payToken = IERC20(_payToken);
@@ -68,6 +68,10 @@ contract NFTCatSale is DivToken {
         t.hp = _tokenInfo.hp;
         t.atk = _tokenInfo.atk;
         t.def = _tokenInfo.def;
+    }
+
+    function setIniPeople() external onlyAdmin {
+        DivToken.IniPeople();
     }
 
     // 上架猫  1BNB拍卖  2CP拍卖

@@ -35,7 +35,7 @@ contract SharePool is BaseUpgradeable {
 //        catAddr = IERC721(_catAddr);
 //        cpFeeAddr = _cpFeeAddr;
 //    }
-    function __SharePool_init(address _payToken, address _catAddr, address _cpFeeAddr) public initializer {
+    function initialize(address _payToken, address _catAddr, address _cpFeeAddr) public initializer {
         BaseUpgradeable.__Base_init();
         payToken = IERC20(_payToken);
         catAddr = IERC721(_catAddr);

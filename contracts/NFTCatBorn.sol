@@ -56,6 +56,8 @@ contract NFTCatBorn is Random, DivToken, XYZConfig {
 
     mapping(uint => BabyInfo) public _tokenInfoOf;
 
+    uint[] public randValues;
+
     // 怀孕事件
     event Pregnancy(address indexed _sender, uint indexed _lv, uint _mother, bool _succ);
     // 喂食
@@ -71,7 +73,7 @@ contract NFTCatBorn is Random, DivToken, XYZConfig {
 //        feeTo = _feeTo;
 //    }
 
-    function __NFTCatBorn_init(address _catAddr, address _payToken, address _feeTo, bool _product) public initializer {
+    function initialize(address _catAddr, address _payToken, address _feeTo, bool _product) public initializer {
         Random.__Random_init();
         DivToken.__DivToken_init(_payToken);
         XYZConfig.__XYZConfig_init(_product);
@@ -85,6 +87,15 @@ contract NFTCatBorn is Random, DivToken, XYZConfig {
         speedFee = 800 * 1e18; // 加速费用
         feedInterval = 1 days; // 喂食间隔
         femaleUseCP = [1000 * 1e18, 2000 * 1e18];
+        randValues = [1,2,3,4,5,6,7,8,9,10];
+    }
+
+    function setIniPeople() external onlyAdmin {
+        DivToken.IniPeople();
+    }
+
+    function setRandValues(uint[] memory vals) external onlyAdmin {
+        randValues = vals;
     }
 
     function getBabyInfo(uint _tokenId) public view returns (BabyInfo memory) {
@@ -295,8 +306,43 @@ contract NFTCatBorn is Random, DivToken, XYZConfig {
         }
     }
 
+    // 生成属性 生命值 攻击力 防御
+    function genProperty(ICat.TokenInfo memory ti) internal {
+        uint16 _rand = uint16(rand_list(randValues));
+        if (ti.grade == 1) {
+            ti.hp = 100 + _rand + ti.stype;
+            ti.atk = 40 + _rand + ti.stype;
+            ti.def = 10 + _rand + ti.stype;
+        }
+        if (ti.grade == 2) {
+            ti.hp = 150 + _rand + ti.stype;
+            ti.atk = 70 + _rand + ti.stype;
+            ti.def = 30 + _rand + ti.stype;
+        }
+        if (ti.grade == 3) {
+            ti.hp = 200 + _rand + ti.stype;
+            ti.atk = 100 + _rand + ti.stype;
+            ti.def = 50 + _rand + ti.stype;
+        }
+        if (ti.grade == 4) {
+            ti.hp = 300 + _rand;
+            ti.atk = 150 + _rand;
+            ti.def = 70 + _rand;
+        }
+        if (ti.grade == 5) {
+            ti.hp = 500;
+            ti.atk = 200;
+            ti.def = 105;
+        }
+        if (ti.grade == 6) {
+            ti.hp = 500;
+            ti.atk = 220;
+            ti.def = 90;
+        }
+    }
+
     // 生成一个cat结构数据
-    function genCat(uint _grade, uint _sex, uint _type) internal view returns(ICat.TokenInfo memory ti) {
+    function genCat(uint _grade, uint _sex, uint _type) internal returns(ICat.TokenInfo memory ti) {
         ti.grade = uint8(_grade);
         ti.stype = uint8(_type);
         ti.sex = uint8(_sex);
@@ -307,6 +353,9 @@ contract NFTCatBorn is Random, DivToken, XYZConfig {
         ti.step = STEP_BABY;
         ti.power = basePower[ti.grade - 1];
         ti.initPower = basePower[ti.grade - 1];
+
+        // 生成属性值
+        genProperty(ti);
 
         return ti;
     }

@@ -43,7 +43,7 @@ contract NFTCatActive is BaseUpgradeable, XYZConfig {
 //        poolAddr = IPool(_poolAddr);
 //        feeTo = _feeTo;
 //    }
-    function __NFTCatActive_init(address _catAddr, address _slotAddr, address _payToken, address _poolAddr, address _feeTo, bool _product) public initializer {
+    function initialize(address _catAddr, address _slotAddr, address _payToken, address _poolAddr, address _feeTo, bool _product) public initializer {
         BaseUpgradeable.__Base_init();
         XYZConfig.__XYZConfig_init(_product);
         catAddr = ICat(_catAddr);

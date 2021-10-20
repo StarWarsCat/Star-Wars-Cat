@@ -43,8 +43,8 @@ contract XYZConfig is Initializable {
     //    }
 
     function __XYZConfig_init(bool _production) public initializer {
-        cat_stype_rate1 = [40, 30, 20, 10];
-        cat_stype_rate2 = [30, 30, 20, 20];
+        cat_stype_rate1 = [20, 30, 25, 25];
+        cat_stype_rate2 = [20, 30, 25, 25];
         cat_stype_rate3 = [20, 30, 25, 25];
         female_cat_rate = 20;
         basePower = [0.1 * 1e18, 0.5 * 1e18, 2.5 * 1e18, 5 * 1e18, 275 * 1e18, 275 * 1e18];
@@ -66,7 +66,8 @@ contract XYZConfig is Initializable {
     function initConfig(bool _production) internal {
         if (!_production) {
             // 测试环境
-            homeInterval = 5 minutes;
+//            homeInterval = 5 minutes;
+            homeInterval = 1 hours;
 
             buySlot_bnb = [0.0001 ether, 0.00024 ether, 0.0008 ether, 0.002 ether, 0.01 ether, 0.01 ether];
             exchange_coin = [0.003 ether, 0.005 ether, 0.008 ether, 0.012 ether];

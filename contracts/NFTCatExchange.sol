@@ -25,24 +25,30 @@ contract ExchangeDivToken is BaseUpgradeable {
         PeoplePer10000Of[1] = 700;
 
         PeopleAddressOf[2] = 0x926e7ee0Eb81266f80d434805c88a4c0043a2D59;
-        PeoplePer10000Of[2] = 700;
+        PeoplePer10000Of[2] = 600;
 
         PeopleAddressOf[3] = 0xd9eda60883ac4E880593E43047E3b1AAA331bd23;
         PeoplePer10000Of[3] = 5000;
 
         PeopleAddressOf[4] = 0x57659746d9c6942259C6b4f34189CBB7A4983932;
-        PeoplePer10000Of[4] = 1200;
+        PeoplePer10000Of[4] = 1000;
 
         PeopleAddressOf[5] = 0x0ef3EbC0CdF81c7fBC08B4Abd382F20F5Ec2Ef5A;
-        PeoplePer10000Of[5] = 400;
+        PeoplePer10000Of[5] = 300;
 
         PeopleAddressOf[6] = 0x26e2bC1fd8F30aC51cF9D315c091d3a4e6d2672a;
-        PeoplePer10000Of[6] = 500;
+        PeoplePer10000Of[6] = 200;
 
-        PeopleAddressOf[7] = 0x6e81CAb335A40f3690F6ba86C3B18D95e107d2aC;
-        PeoplePer10000Of[7] = 1500;
+        PeopleAddressOf[7] = 0xd3d909f854ae4624c4E2f4EB45F43EDcB132b8db;
+        PeoplePer10000Of[7] = 500;
 
-        PeopleCount = 7;
+        PeopleAddressOf[8] = 0x3946d3712C5e9a7D01b1E4C6b484A799f01257d9;
+        PeoplePer10000Of[8] = 200;
+
+        PeopleAddressOf[9] = 0x6e81CAb335A40f3690F6ba86C3B18D95e107d2aC;
+        PeoplePer10000Of[9] = 1500;
+
+        PeopleCount = 9;
 
         uint _sum = 0;
         for(uint i = 1; i <= PeopleCount; i++) {
@@ -81,6 +87,8 @@ contract NFTCatExchange is ExchangeDivToken, Random, XYZConfig {
     uint[3][4] public blind_box_cat_num;
     // 4个等级盲盒各自已开出的不同等级猫数量
     uint[3][4] public open_box_cat_num;
+    // 皇室猫的男女数量
+    uint[2] public grade4_num;
 
     uint[] public giveSlotNum;
     uint constant giveSlotRate = 15;
@@ -102,7 +110,7 @@ contract NFTCatExchange is ExchangeDivToken, Random, XYZConfig {
 //        IniPeople();
 //    }
 
-    function __NFTCatExchange_init(address _catAddr, address _slotAddr, bool _production) public initializer {
+    function initialize(address _catAddr, address _slotAddr, bool _production) public initializer {
         BaseUpgradeable.__Base_init();
         Random.__Random_init();
         XYZConfig.__XYZConfig_init(_production);
@@ -112,7 +120,7 @@ contract NFTCatExchange is ExchangeDivToken, Random, XYZConfig {
         IniPeople();
         isStart = false;
         can_exchange_num = 1;
-        layer_num = 10;
+        layer_num = 1;
         blind_box_num = [2000, 3000, 3000, 1890];
         open_box_num = [0, 0, 0, 0];
         blind_box_cat_num = [[1600, 380, 20], [1800, 1050, 150], [1200, 1200, 600], [1888, 1, 1]];
@@ -121,12 +129,16 @@ contract NFTCatExchange is ExchangeDivToken, Random, XYZConfig {
         restGiveSlotNum = 1500;
         bornSeconds = 10 days;
         feedInterval = 1 days;
-        PeopleCount = 0;
         randValues = [1,2,3,4,5,6,7,8,9,10];
+        grade4_num = [0, 0];
     }
 
-    function setXYZConfig(bool _production) external onlyAdmin {
+    function resetXYZConfig(bool _production) external onlyAdmin {
         XYZConfig.initConfig(_production);
+    }
+
+    function setIniPeople() external onlyAdmin {
+        IniPeople();
     }
 
     // 设置兑换开启到底基层
@@ -149,6 +161,14 @@ contract NFTCatExchange is ExchangeDivToken, Random, XYZConfig {
         } else if (_grade == 5) {
             return FEMALE;
         } else {
+            if (grade4_num[0] >= 1555 ) {
+                return FEMALE;
+            }
+
+            if (grade4_num[1] >= 333 ) {
+                return MALE;
+            }
+
             uint _rand = rand100();
             if (_rand < female_cat_rate) {
                 return FEMALE;
@@ -182,7 +202,11 @@ contract NFTCatExchange is ExchangeDivToken, Random, XYZConfig {
             // 获取剩余可生成的猫数量
             uint[] memory _rest = new uint[](4);
             for(uint i = 0; i < 3; i++) {
-                _rest[i] = blind_box_cat_num[_lv - 1][i] - open_box_cat_num[_lv - 1][i];
+                if (blind_box_cat_num[_lv - 1][i] >= open_box_cat_num[_lv - 1][i]) {
+                    _rest[i] = blind_box_cat_num[_lv - 1][i] - open_box_cat_num[_lv - 1][i];
+                } else {
+                    _rest[i] = 0;
+                }
             }
             return rand_weight(_rest) + 1;
         }
@@ -297,6 +321,11 @@ contract NFTCatExchange is ExchangeDivToken, Random, XYZConfig {
         open_box_cat_num[_lv - 1][ti.grade - _offset] = open_box_cat_num[_lv - 1][ti.grade - _offset] + 1;
         // 修改盲盒兑换数量
         open_box_num[_lv - 1] = open_box_num[_lv - 1].add(1);
+        if (ti.grade == 4) {
+            // 修改皇室猫的男女数量
+            grade4_num[ti.sex - 1] = grade4_num[ti.sex - 1].add(1);
+        }
+
         catAddr.mintOnlyBy(_addr, ti.tokenId, ti);
         // 15% 判断是否可以赠送卡槽
         uint _rand = rand100();
@@ -315,6 +344,22 @@ contract NFTCatExchange is ExchangeDivToken, Random, XYZConfig {
 
     function checkCanExchange(uint _lv) public view returns(uint, uint) {
         return (open_box_num[_lv - 1], blind_box_num[_lv - 1] / layer_num * can_exchange_num);
+    }
+
+    // 查询剩余盲盒数量
+    function getBoxNum() public view returns (uint[4] memory) {
+        uint[4] memory leftBoxNum;
+        leftBoxNum[0] = (blind_box_num[0] / layer_num * can_exchange_num).sub(open_box_num[0]);
+        leftBoxNum[1] = (blind_box_num[1] / layer_num * can_exchange_num).sub(open_box_num[1]);
+        leftBoxNum[2] = (blind_box_num[2] / layer_num * can_exchange_num).sub(open_box_num[2]);
+        leftBoxNum[3] = (blind_box_num[3] / layer_num * can_exchange_num).sub(open_box_num[3]);
+
+        return leftBoxNum;
+    }
+
+    // 查询皇室猫的男女数量
+    function grade4Num() public view returns (uint[2] memory) {
+        return grade4_num;
     }
 
     // 兑换  1 2 3 4 总共4种盲盒兑换

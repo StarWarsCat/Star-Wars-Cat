@@ -27,7 +27,7 @@ contract NFTSaleData is BaseUpgradeable {
 //        catAddr = ICat(_addr);
 //    }
 
-    function __NFTSaleData_init(address _addr) public initializer {
+    function initialize(address _addr) public initializer {
         BaseUpgradeable.__Base_init();
         catAddr = ICat(_addr);
         _currentTokenId = 0;
